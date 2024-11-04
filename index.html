@@ -121,7 +121,10 @@
                 document.querySelector('#branches').style.display = 'block'
             } else if (questionNr === 4 || questionNr === 5) {
                 let response = await foundry.textToText({ api_token: api_token, prompt: `Message History: ${JSON.stringify(messageHistory)}. Provide the next message. Keep it short. Use ${emotion} emotion. Don't repeat any messages.` })
+                OOCSImessage('LED_ON') //Turn on thinking light
                 addMessage("assistant", response)
+                OOCSImessage('LED_OFF') //Turn off thinking light
+
             } else if (questionNr === 6) {
                 addMessage("assistant", "All right. Thank you for this conversation!")
             }
