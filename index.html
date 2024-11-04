@@ -1,0 +1,231 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iteration 3</title>
+
+    <!-- PicoCSS stylesheets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css" />
+
+    <!-- Include AI Foundry Library -->
+    <script src="AI_Foundry_Library.js"></script>
+    <script src="oocsi-web.min.js "></script>
+
+</head>
+
+<body>
+    <header class="container">
+        <h1>Iteration 3</h1>
+    </header>
+
+    <main class="container">
+        <section id="chat" class="container">
+            <!-- Initial chatbot message -->
+            <h5>Chatbot</h5>
+            <div class="msg-left">
+                <article class="pico-background-pumpkin-150">
+                    Hi! I'm here to speak to you about your hobbies. What is your
+                    favorite thing to do?
+                </article>
+                <div></div>
+            </div>
+        </section>
+        <section class="container">
+            <!-- Three buttons used to create a branch. Each option has a different response. -->
+            <!-- Initially this section is set to display: none as they are not used immediately -->
+            <section style="display: none" id='branches'>
+                <h5 class="right">YOU</h5>
+                <div class="grid">
+                    <button class="pico-background-pumpkin-350" onclick="userChoice('Forget it')">
+                        Forget it</button><button onclick="userChoice('Nothing else')"
+                        class="pico-background-pumpkin-350">Nothing else</button><button
+                        class="pico-background-pumpkin-350" onclick="userChoice(`I can't choose`)">I can't
+                        choose</button>
+                </div>
+            </section>
+            <!-- User input and send button -->
+            <section id="userResponse">
+                <div role="group">
+                    <input id="userInput" type="text" placeholder="start typing here" onkeydown="checkEnter(event)" />
+                    <button type="submit" class="pico-background-pumpkin-350" onclick="sendMessage()">
+                        send
+                    </button>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <style>
+        /* These styles allow for messages to be located more to the left or right to allow for a chat-like look */
+        .msg-left {
+            display: grid;
+            grid-template-columns: 5fr 1fr;
+            grid-template-rows: 1fr;
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+        }
+
+        .msg-right {
+            display: grid;
+            grid-template-columns: 1fr 5fr;
+            grid-template-rows: 1fr;
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+            text-align: right;
+        }
+
+        .right {
+            text-align: right;
+        }
+    </style>
+
+    <script>
+        //Replace this with your own Data Foundry API Key
+        api_token = ''
+
+        //array that will be used to provide context of the conversation to AI
+        let messageHistory = []
+
+        // questionNr is used to know at thich question the user is, in order to give the correct answer.
+        let questionNr = 1;
+        // hobby variable to store the user response and use it later
+        let hobby = "";
+        // emotion variable to alter the emotional behavior of the AI. This is directly included in the prompt
+        let emotion = "regular"
+
+        //Function to 'send' user input, and provide a response
+        async function sendMessage() {
+            //Extract message from input element
+            let msg = document.querySelector("#userInput").value;
+            //Reset input element
+            document.querySelector("#userInput").value = "";
+            //Add user message to the screen
+            if (msg) {
+                addMessage("user", msg);
+            }
+
+            if (questionNr === 1) {
+                hobby = msg; //save the answer
+                addMessage(
+                    "assistant",
+                    `Interesting! I don't know many people who like ${msg}. What do you like about it?`
+                );
+            } else if (questionNr === 2) {
+                addMessage(
+                    "assistant",
+                    `Now I understand. I have another question for you. If you had to choose between forgetting ${hobby} ever existed, or being able to do nothing else for the rest of your life, what would you choose?`
+                );
+                //Show the buttons to give three options
+                document.querySelector('#branches').style.display = 'block'
+            } else if (questionNr === 4 || questionNr === 5) {
+                let response = await foundry.textToText({ api_token: api_token, prompt: `Message History: ${JSON.stringify(messageHistory)}. Provide the next message. Keep it short. Use ${emotion} emotion. Don't repeat any messages.` })
+                addMessage("assistant", response)
+            } else if (questionNr === 6) {
+                addMessage("assistant", "All right. Thank you for this conversation!")
+            }
+
+            //Increate question counter
+            questionNr += 1;
+        }
+
+        //Function to handle the three options provided by the user and give different answers
+        function userChoice(choice) {
+            addMessage("user", choice);
+            if (choice === 'Forget it') {
+                addMessage(
+                    "assistant",
+                    `Interesting! I guess ${hobby} is not THAT important to you. Can I assume you have other hobbies as well? Tell me about them`
+                );
+            } else if (choice === 'Nothing else') {
+                addMessage(
+                    "assistant",
+                    `Wow! You care a lot about ${hobby}. Is there anything you care about more?`
+                );
+            } else if (choice === `I can't choose`) {
+                addMessage(
+                    "assistant",
+                    `You can't choose? That's the game! :D. Let me frame the question differently. Are there things your care about more than ${hobby}?`
+                );
+            }
+
+            //Remove the buttons from the screen
+            document.querySelector('#branches').style.display = 'none'
+            //Increase question counter
+            questionNr += 1;
+        }
+
+        //Add messages to the screen
+        function addMessage(type, input) {
+            //Add message on right-hand side of screen
+            if (type === "user") {
+                document.querySelector("#chat").insertAdjacentHTML(
+                    "beforeend",
+                    `<h5 class="right">YOU</h5><div class="msg-right">
+          <div></div>
+          <article class="pico-background-pumpkin-350">${input}</article>
+        </div>`
+                );
+            }
+            //Add message to the left-hand side of screen
+            else if (type === "assistant") {
+                document.querySelector("#chat").insertAdjacentHTML(
+                    "beforeend",
+                    `<h5>Chatbot</h5><div class="msg-left">
+          
+          <article class="pico-background-pumpkin-150">${input}</article>
+          <div></div>
+        </div>`
+                );
+            } else {
+                console.error("Unknown type provided");
+            }
+
+            messageHistory.push({ role: type, content: input })
+        }
+
+        //At the input element, when a key is pressed, check if this key was the Enter key. If so, send message.
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        const OOCSIchannelName = 'iterationThree' //Change this to a channel name of your choice
+
+        //OOCSI
+        window.onload = function () {
+            OOCSI.connect("wss://oocsi.id.tue.nl/ws"); //connect to OOCSI server
+            OOCSI.subscribe(OOCSIchannelName, function (msg) {
+                //Subscribe (listen) to OOCSI channel with a name of your choice
+                console.log(msg);
+                console.log("message is: ", msg.data.message); //this will log the received messages
+
+                //When the button is pressed, re-do the AI response
+                if (msg.data.message === "Button pressed") {
+                    console.log('Making new response...')
+                    questionNr = questionNr - 1 //Reset the question Nr count in order to get the correct response
+                    messageHistory.splice(messageHistory.lenth - 1, 1) //Remove the old message from message history
+                    addMessage('user', "Give me a new response") //Visual confirmation that a new message will be generated
+                    sendMessage() //Generate new message
+                } else if (msg.data.message === "High") {
+                    emotion = "extreme" //Change AI emotion
+                } else if (msg.data.message === "Medium") {
+                    emotion = "regular" //Change AI emotion
+                } else if (msg.data.message === "Low") {
+                    emotion = "unfriendly" //Change AI emotion
+                }
+            });
+        };
+
+        //Send oocsi messages (this does not require a function per se)
+        function OOCSImessage(input) {
+            OOCSI.send(OOCSIchannelName, { message: input });
+        }
+
+    </script>
+
+</body>
+
+</html>
