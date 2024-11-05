@@ -7,6 +7,8 @@
 const char* ssid = "";            //Your wifi name
 const char* password = "";  //Your wifi password
 
+const char* OOCSIchannelName = "iterationThree";  //change the name of the channel you want to use!
+
 //start oocsi
 OOCSI oocsi = OOCSI();
 
@@ -16,8 +18,6 @@ const int piezoPin = 32;   //Analog pin
 
 int buttonState = 0;  //Initiate that the button is not pressed
 int piezoValue = 0;   //Initiate that the piezo is not touched
-
-const char* OOCSIchannelName = "iterationThree";  //change the name of the channel you want to use!
 
 String receivedMessage;   //OOCSI message will be assigned to this variable
 String lastPiezoMessage;  //Last piezo message will be assigned to this variable
