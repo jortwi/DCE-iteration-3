@@ -87,6 +87,9 @@
 
         //array that will be used to provide context of the conversation to AI
         let messageHistory = []
+        //Add first message
+        messageHistory.push({ role: 'assistant', content: "Hi! I'm here to speak to you about your hobbies. What is your favorite thing to do?" })
+
 
         // questionNr is used to know at thich question the user is, in order to give the correct answer.
         let questionNr = 1;
