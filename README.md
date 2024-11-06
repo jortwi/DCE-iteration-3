@@ -1,4 +1,4 @@
-# DCE-iteration-2
+# DCE-iteration-3
 
 A chatbot example with physical embodiment for TU/e Industrial Design's Master course Designing Conversational Experiences. The example builds on an earlier iteration, and adds a light to indicate thinking, a button to re-do an AI response, and a piezo sensor to indicate emotion to the AI.
 
