@@ -19,6 +19,10 @@ const int piezoPin = 32;   //Analog pin
 int buttonState = 0;  //Initiate that the button is not pressed
 int piezoValue = 0;   //Initiate that the piezo is not touched
 
+int oldPiezoValue = 0; //Using comparison variable to reduce frequency of OOCSI messages
+int latestUpdateTime = millis(); //Variable to check how l ong ago the piezo value was last updated and sent through OOCSI
+
+
 String receivedMessage;   //OOCSI message will be assigned to this variable
 String lastPiezoMessage;  //Last piezo message will be assigned to this variable
 
@@ -56,43 +60,54 @@ void loop() {
     delay(150);
   }
 
+  
   //Take the analog value from the piezo
   piezoValue = analogRead(piezoPin);
   Serial.println(piezoValue);
 
-  //Pressing hard
-  if (piezoValue >= 3000) {
-    if (lastPiezoMessage != "High") {
-      //send OOCSI message
+//Only send OOCSI message with piezo value / emotion when there is a significant change, or it has not been changed a "long" time
+  if (((piezoValue - oldPiezoValue) > 100) || ((millis() - latestUpdateTime) > 2000)) {
+    Serial.print("used piezo value: ");
+    Serial.println(piezoValue);
+    //Pressing hard
+    if (piezoValue >= 3000) {
+      if (lastPiezoMessage != "High") {
+        //send OOCSI message
 
-      oocsi.newMessage(OOCSIchannelName);
-      oocsi.addString("message", "High");
-      oocsi.sendMessage();
-      delay(150);
-      lastPiezoMessage = "High";
-    }
-    //Pressing firmly
-  } else if (piezoValue >= 1500) {
-    if (lastPiezoMessage != "Medium") {
-      //send OOCSI message
+        oocsi.newMessage(OOCSIchannelName);
+        oocsi.addString("message", "High");
+        oocsi.sendMessage();
+        delay(150);
+        lastPiezoMessage = "High";
+      }
+      //Pressing firmly
+    } else if (piezoValue >= 1500) {
+      if (lastPiezoMessage != "Medium") {
+        //send OOCSI message
 
-      oocsi.newMessage(OOCSIchannelName);
-      oocsi.addString("message", "Medium");
-      oocsi.sendMessage();
-      delay(150);
-      lastPiezoMessage = "Medium";
+        oocsi.newMessage(OOCSIchannelName);
+        oocsi.addString("message", "Medium");
+        oocsi.sendMessage();
+        delay(150);
+        lastPiezoMessage = "Medium";
+      }
+      //Touching
+    } else if (piezoValue >= 500) {
+      if (lastPiezoMessage != "Low") {
+        //send OOCSI message
+        oocsi.newMessage(OOCSIchannelName);
+        oocsi.addString("message", "Low");
+        oocsi.sendMessage();
+        delay(150);
+        lastPiezoMessage = "Low";
+      }
     }
-    //Touching
-  } else if (piezoValue >= 500) {
-    if (lastPiezoMessage != "Low") {
-      //send OOCSI message
-      oocsi.newMessage(OOCSIchannelName);
-      oocsi.addString("message", "Low");
-      oocsi.sendMessage();
-      delay(150);
-      lastPiezoMessage = "Low";
-    }
+    oldPiezoValue = piezoValue;
+    latestUpdateTime = millis();
   }
+
+
+
   //If the piezo is not being touched, do not set value to low, as it would disturb results
 
 
